@@ -1,0 +1,14 @@
+data:
+  path: data/raw/train.csv
+  drop_columns: [ID, Segmentation]
+
+preprocessing:
+  rare_threshold: 0.05
+
+model:
+  n_clusters: 4
+  n_components: 13   # null = без PCA
+  random_state: 42
+
+mlflow:
+  experiment_name: customer-segmentation
