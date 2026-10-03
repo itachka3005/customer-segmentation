@@ -42,6 +42,7 @@ def train_and_log(
     params: dict,
     run_name: str | None = None,
     log_model: bool = True,
+    registered_model_name: str | None = None,
 ) -> dict[str, float]:
     pipe = build_pipeline(**params)
     with mlflow.start_run(run_name=run_name):
@@ -52,7 +53,10 @@ def train_and_log(
         if log_model:
             mlflow.log_artifact("configs/config.yaml")
             mlflow.sklearn.log_model(
-                pipe, name="model", skops_trusted_types=["numpy.dtype"]
+                pipe,
+                name="model",
+                skops_trusted_types=["numpy.dtype"],
+                registered_model_name=registered_model_name,
             )
     return metrics
 
@@ -61,7 +65,11 @@ def main() -> None:
     cfg = load_config()
     X = load_features(cfg)
     mlflow.set_experiment(cfg["mlflow"]["experiment_name"])
-    train_and_log(X, params_from_config(cfg))
+    train_and_log(
+        X,
+        params_from_config(cfg),
+        registered_model_name=cfg["mlflow"]["registered_model_name"],
+    )
 
 
 if __name__ == "__main__":
