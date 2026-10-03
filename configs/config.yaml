@@ -7,8 +7,9 @@ preprocessing:
 
 model:
   n_clusters: 4
-  n_components: 13   # null = без PCA
+  n_components: null   # без PCA: качество как у PCA-13, модель проще
   random_state: 42
-
+  
 mlflow:
   experiment_name: customer-segmentation
+  
