@@ -13,4 +13,9 @@ model:
 mlflow:
   experiment_name: customer-segmentation
   registered_model_name: customer-segmentation
-  
+
+segments:
+  0: Middle-aged singles
+  1: Experienced professionals
+  2: Established families
+  3: Young healthcare workers

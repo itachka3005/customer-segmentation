@@ -85,7 +85,7 @@ Comparison with the sales team's segments A–D (not used in training): ARI = 0.
 
 ## Tech stack
 
-Python 3.11, pandas, scikit-learn, MLflow, matplotlib, ruff
+Python 3.11, pandas, scikit-learn, MLflow, matplotlib, ruff, FastAPI
 
 ## Project structure
 
@@ -106,6 +106,7 @@ src/
   train.py                          # training with MLflow tracking and registration
   sweep.py                          # hyperparameter sweep
   promote.py                        # set the champion model version
+  api.py                            # REST API for segment prediction
 tests/
 ```
 
@@ -147,7 +148,27 @@ python -m src.promote 1
 ```bash
 mlflow ui
 ```
+7. Run the API:
 
+```bash
+uvicorn src.api:app --reload
+```
+
+Interactive documentation: http://127.0.0.1:8000/docs
+
+Example request:
+
+```bash
+curl -X POST http://127.0.0.1:8000/predict \
+  -H "Content-Type: application/json" \
+  -d '{"Gender": "Female", "Ever_Married": "No", "Age": 27, "Graduated": "No", "Profession": "Healthcare", "Work_Experience": 1, "Spending_Score": "Low", "Family_Size": 4, "Var_1": "Cat_6"}'
+```
+
+Response:
+
+```json
+{"cluster": 3, "segment": "Young healthcare workers"}
+```
 ## Roadmap
 
 - [x] Project scaffolding
@@ -156,6 +177,6 @@ mlflow ui
 - [x] Experiment tracking with MLflow
 - [x] Model registry
 - [x] Segment interpretation
-- [ ] REST API (FastAPI)
+- [x] REST API (FastAPI)
 - [ ] Docker
 - [ ] Tests and CI
