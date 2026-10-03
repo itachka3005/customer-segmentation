@@ -9,7 +9,8 @@ model:
   n_clusters: 4
   n_components: null   # без PCA: качество как у PCA-13, модель проще
   random_state: 42
-  
+
 mlflow:
   experiment_name: customer-segmentation
+  registered_model_name: customer-segmentation
   
