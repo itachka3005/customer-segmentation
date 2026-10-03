@@ -13,7 +13,7 @@ The goal of this project is to build an unsupervised segmentation pipeline that:
 
 ## Data
 
-[Customer Segmentation dataset](https://www.kaggle.com/datasets/vetrirah/customer) (Analytics Vidhya Janatahack, available on Kaggle).
+[Customer Segmentation dataset](<link>) (Analytics Vidhya Janatahack, available on Kaggle).
 
 - 8068 customers, 9 features: `Gender`, `Ever_Married`, `Age`, `Graduated`, `Profession`, `Work_Experience`, `Spending_Score`, `Family_Size`, `Var_1`.
 - `Segmentation` (A–D) is the ground-truth segment from the sales team. It is **not** used for training, only for comparison with the obtained clusters.
@@ -66,6 +66,23 @@ Conclusions:
 - PCA with 2 components loses too much information and is used only for visualization.
 - **k = 4** was chosen: best Davies–Bouldin score (1.89), elbow of the inertia curve, close silhouette to k = 3 (0.158 vs 0.171), and direct comparability with the 4 business segments.
 
+## Results
+
+Final model: KMeans with k = 4 on 24 preprocessed features, without PCA.
+
+| Segment | Share | Key traits |
+|---|---|---|
+| Middle-aged singles | 26% | Live alone, median age 47, 100% low spending |
+| Experienced professionals | 19% | Median work experience 8 years (overall: 1), small families |
+| Established families | 33% | 98% married, median age 51, the only segment with high spending |
+| Young healthcare workers | 22% | Median age 27, 9% married, 54% work in healthcare |
+
+Detailed profiles: `notebooks/03_segment_profiles.ipynb`.
+
+![Clusters vs business segments](reports/figures/clusters_pca.png)
+
+Comparison with the sales team's segments A–D (not used in training): ARI = 0.098, NMI = 0.099. Young healthcare workers strongly match segment D (63%), and established families correspond mostly to segments C and B. Demographic features alone are not enough to separate segments A, B and C.
+
 ## Tech stack
 
 Python 3.11, pandas, scikit-learn, MLflow, matplotlib, ruff
@@ -74,18 +91,21 @@ Python 3.11, pandas, scikit-learn, MLflow, matplotlib, ruff
 
 ```
 configs/
-  config.yaml                  # data paths, hyperparameters, MLflow settings
-data/                          # raw and processed data (not tracked by git)
+  config.yaml                       # data paths, hyperparameters, MLflow settings
+data/                               # raw and processed data (not tracked by git)
 notebooks/
-  01_eda.ipynb                 # exploratory data analysis
-  02_preprocessing_prototype.ipynb
+  01_eda.ipynb                      # exploratory data analysis
+  02_preprocessing_prototype.ipynb  # manual preprocessing to validate EDA decisions
+  03_segment_profiles.ipynb         # segment profiles and visualization
+reports/
+  figures/                          # figures for README
 src/
-  config.py                    # config loading
-  data.py                      # data loading
-  pipeline.py                  # preprocessing + clustering pipeline
-  train.py                     # training with MLflow tracking and registration
-  sweep.py                     # hyperparameter sweep
-  promote.py                   # set the champion model version
+  config.py                         # config loading
+  data.py                           # data loading
+  pipeline.py                       # preprocessing + clustering pipeline
+  train.py                          # training with MLflow tracking and registration
+  sweep.py                          # hyperparameter sweep
+  promote.py                        # set the champion model version
 tests/
 ```
 
@@ -135,7 +155,7 @@ mlflow ui
 - [x] Training pipeline
 - [x] Experiment tracking with MLflow
 - [x] Model registry
-- [ ] Segment interpretation
+- [x] Segment interpretation
 - [ ] REST API (FastAPI)
 - [ ] Docker
-- [ ]
+- [ ] Tests and CI
