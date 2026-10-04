@@ -1,6 +1,6 @@
 # Customer Segmentation
 
-End-to-end ML project: customer clustering with a reproducible scikit-learn pipeline, experiment tracking and model registry in MLflow.
+End-to-end ML project: customer clustering with a reproducible scikit-learn pipeline, experiment tracking and model registry in MLflow, REST API on FastAPI and Docker deployment.
 
 ## Problem
 
@@ -13,7 +13,7 @@ The goal of this project is to build an unsupervised segmentation pipeline that:
 
 ## Data
 
-[Customer Segmentation dataset](<link>) (Analytics Vidhya Janatahack, available on Kaggle).
+[Customer Segmentation dataset](https://www.kaggle.com/datasets/vetrirah/customer/data) (Analytics Vidhya Janatahack, available on Kaggle).
 
 - 8068 customers, 9 features: `Gender`, `Ever_Married`, `Age`, `Graduated`, `Profession`, `Work_Experience`, `Spending_Score`, `Family_Size`, `Var_1`.
 - `Segmentation` (A–D) is the ground-truth segment from the sales team. It is **not** used for training, only for comparison with the obtained clusters.
@@ -83,16 +83,28 @@ Detailed profiles: `notebooks/03_segment_profiles.ipynb`.
 
 Comparison with the sales team's segments A–D (not used in training): ARI = 0.098, NMI = 0.099. Young healthcare workers strongly match segment D (63%), and established families correspond mostly to segments C and B. Demographic features alone are not enough to separate segments A, B and C.
 
+## Serving
+
+The champion model is served by a FastAPI service (`src/api.py`):
+- `POST /predict` — takes a customer profile and returns the cluster number and segment name;
+- `GET /health` — health check.
+
+Input data is validated by Pydantic: invalid values (for example, `Age` below 18) return a `422` error. Fields that had missing values in the training data are optional, and the pipeline imputes them.
+
+The model location is set by the `MODEL_URI` environment variable: by default the API loads the `champion` version from the MLflow Model Registry, while the Docker image uses the exported model from `models/champion`.
+
 ## Tech stack
 
-Python 3.11, pandas, scikit-learn, MLflow, matplotlib, ruff, FastAPI
+Python 3.11, pandas, scikit-learn, MLflow, FastAPI, Docker, matplotlib, ruff
 
 ## Project structure
 
 ```
 configs/
-  config.yaml                       # data paths, hyperparameters, MLflow settings
+  config.yaml                       # data paths, hyperparameters, MLflow settings, segment names
 data/                               # raw and processed data (not tracked by git)
+models/
+  champion/                         # exported model used by the Docker image
 notebooks/
   01_eda.ipynb                      # exploratory data analysis
   02_preprocessing_prototype.ipynb  # manual preprocessing to validate EDA decisions
@@ -106,17 +118,46 @@ src/
   train.py                          # training with MLflow tracking and registration
   sweep.py                          # hyperparameter sweep
   promote.py                        # set the champion model version
+  export_model.py                   # export the champion model for serving
   api.py                            # REST API for segment prediction
 tests/
+Dockerfile
 ```
 
 ## How to run
 
-1. Clone the repository and install dependencies:
+### Quick start with Docker
+
+The repository already contains the exported model, so the API can be started without training:
 
 ```bash
 git clone https://github.com/itachka3005/customer-segmentation.git
 cd customer-segmentation
+docker build -t customer-segmentation-api .
+docker run -p 8000:8000 customer-segmentation-api
+```
+
+Open the interactive documentation at http://127.0.0.1:8000/docs.
+
+Example request:
+
+```bash
+curl -X POST http://127.0.0.1:8000/predict \
+  -H "Content-Type: application/json" \
+  -d '{"Gender": "Female", "Ever_Married": "No", "Age": 27, "Graduated": "No", "Profession": "Healthcare", "Work_Experience": 1, "Spending_Score": "Low", "Family_Size": 4, "Var_1": "Cat_6"}'
+```
+
+Response:
+
+```json
+{"cluster": 3, "segment": "Young healthcare workers"}
+```
+
+### Full training workflow
+
+1. Create a virtual environment and install dependencies:
+
+```bash
 python -m venv .venv
 .venv\Scripts\activate          # Windows
 # source .venv/bin/activate     # Linux / macOS
@@ -148,27 +189,19 @@ python -m src.promote 1
 ```bash
 mlflow ui
 ```
-7. Run the API:
+
+7. Run the API locally (loads the `champion` model from the registry):
 
 ```bash
 uvicorn src.api:app --reload
 ```
 
-Interactive documentation: http://127.0.0.1:8000/docs
-
-Example request:
+8. Export the champion model for the Docker image:
 
 ```bash
-curl -X POST http://127.0.0.1:8000/predict \
-  -H "Content-Type: application/json" \
-  -d '{"Gender": "Female", "Ever_Married": "No", "Age": 27, "Graduated": "No", "Profession": "Healthcare", "Work_Experience": 1, "Spending_Score": "Low", "Family_Size": 4, "Var_1": "Cat_6"}'
+python -m src.export_model
 ```
 
-Response:
-
-```json
-{"cluster": 3, "segment": "Young healthcare workers"}
-```
 ## Roadmap
 
 - [x] Project scaffolding
@@ -178,5 +211,5 @@ Response:
 - [x] Model registry
 - [x] Segment interpretation
 - [x] REST API (FastAPI)
-- [ ] Docker
+- [x] Docker
 - [ ] Tests and CI
