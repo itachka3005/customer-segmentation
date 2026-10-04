@@ -20,7 +20,8 @@ def customers() -> pd.DataFrame:
         "Family_Size": rng.integers(1, 9, n).astype(float),
         "Var_1": rng.choice(["Cat_1", "Cat_4", "Cat_6"], n),
     })
-    df.loc[:4, ["Ever_Married", "Profession", "Work_Experience", "Family_Size"]] = np.nan
+    missing_cols = ["Ever_Married", "Profession", "Work_Experience", "Family_Size"]
+    df.loc[:4, missing_cols] = np.nan
     return df
 
 
