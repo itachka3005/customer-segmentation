@@ -1,5 +1,6 @@
 # Customer Segmentation
 
+![CI](https://github.com/itachka3005/customer-segmentation/actions/workflows/ci.yml/badge.svg)
 End-to-end ML project: customer clustering with a reproducible scikit-learn pipeline, experiment tracking and model registry in MLflow, REST API on FastAPI and Docker deployment.
 
 ## Problem
@@ -93,13 +94,30 @@ Input data is validated by Pydantic: invalid values (for example, `Age` below 18
 
 The model location is set by the `MODEL_URI` environment variable: by default the API loads the `champion` version from the MLflow Model Registry, while the Docker image uses the exported model from `models/champion`.
 
+## Testing and CI
+
+- `tests/test_pipeline.py` — pipeline tests on synthetic data: missing values, unseen categories, PCA option.
+- `tests/test_api.py` — API tests: valid requests, optional fields, input validation errors.
+
+GitHub Actions runs `ruff`, `pytest`, builds the Docker image and checks that the container responds on every push to `main`.
+
+Run locally:
+
+```bash
+ruff check .
+pytest -v
+```
+
 ## Tech stack
 
-Python 3.11, pandas, scikit-learn, MLflow, FastAPI, Docker, matplotlib, ruff
+Python 3.11, pandas, scikit-learn, MLflow, FastAPI, Docker, pytest, GitHub Actions, matplotlib, ruff
 
 ## Project structure
 
 ```
+.github/
+  workflows/
+    ci.yml                          # CI pipeline
 configs/
   config.yaml                       # data paths, hyperparameters, MLflow settings, segment names
 data/                               # raw and processed data (not tracked by git)
@@ -121,6 +139,9 @@ src/
   export_model.py                   # export the champion model for serving
   api.py                            # REST API for segment prediction
 tests/
+  conftest.py                       # test configuration
+  test_pipeline.py                  # pipeline tests
+  test_api.py                       # API tests
 Dockerfile
 ```
 
@@ -212,4 +233,4 @@ python -m src.export_model
 - [x] Segment interpretation
 - [x] REST API (FastAPI)
 - [x] Docker
-- [ ] Tests and CI
+- [x] Tests and CI
