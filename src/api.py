@@ -1,6 +1,6 @@
+import os
 from contextlib import asynccontextmanager
 from typing import Literal
-
 import mlflow.sklearn
 import numpy as np
 import pandas as pd
@@ -14,7 +14,9 @@ CATEGORICAL = [
 ]
 
 cfg = load_config()
-MODEL_URI = f"models:/{cfg['mlflow']['registered_model_name']}@champion"
+MODEL_URI = os.getenv(
+    "MODEL_URI", f"models:/{cfg['mlflow']['registered_model_name']}@champion"
+)
 SEGMENTS: dict[int, str] = cfg["segments"]
 state = {}
 
